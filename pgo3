@@ -1,0 +1,126 @@
+import java.util.*;
+
+class Product {
+    private int id;
+    private String name;
+    private String category;
+    private double price;
+    private int stock;
+
+    public Product(int id, String name, String category, double price, int stock) {
+        this.id = id;
+        this.name = name;
+        this.category = category;
+        this.price = price;
+        this.stock = stock;
+    }
+
+    public int getId() { return id; }
+    public String getName() { return name; }
+    public double getPrice() { return price; }
+    public int getStock() { return stock; }
+    public void setStock(int stock) { this.stock = stock; }
+
+    public void display() {
+        System.out.println(name + " (" + category + ") - " + price + "$, In stock: " + stock);
+    }
+}
+
+class Customer {
+    private int id;
+    private String name;
+    private boolean isLoyal;
+
+    public Customer(int id, String name, boolean isLoyal) {
+        this.id = id;
+        this.name = name;
+        this.isLoyal = isLoyal;
+    }
+
+    public int getId() { return id; }
+    public boolean isLoyal() { return isLoyal; }
+    
+    public void display() {
+        System.out.println("Customer: " + name + " (Loyal: " + isLoyal + ")");
+    }
+}
+
+class Order {
+    private int id;
+    private Customer customer;
+    private Map<Product, Integer> items;
+    private String status;
+    private static int orderCounter = 1;
+
+    public Order(Customer customer, Map<Product, Integer> items) {
+        this.id = orderCounter++;
+        this.customer = customer;
+        this.items = items;
+        this.status = "New";
+    }
+
+    public void setStatus(String status) { this.status = status; }
+    public double totalPrice() {
+        double total = 0;
+        for (Map.Entry<Product, Integer> entry : items.entrySet()) {
+            total += entry.getKey().getPrice() * entry.getValue();
+        }
+        return customer.isLoyal() ? total * 0.9 : total;
+    }
+    public void display() {
+        System.out.println("Order #" + id + " - " + status);
+        for (Map.Entry<Product, Integer> entry : items.entrySet()) {
+            System.out.println(entry.getKey().getName() + " x" + entry.getValue());
+        }
+        System.out.println("Total: " + totalPrice() + "$\n");
+    }
+}
+
+class ComputerStore {
+    private List<Product> products = new ArrayList<>();
+    private List<Customer> customers = new ArrayList<>();
+    private List<Order> orders = new ArrayList<>();
+
+    public void addProduct(Product product) { products.add(product); }
+    public void addCustomer(Customer customer) { customers.add(customer); }
+    
+    public void createOrder(Customer customer, Map<Product, Integer> items) {
+        Order order = new Order(customer, items);
+        orders.add(order);
+        for (Map.Entry<Product, Integer> entry : items.entrySet()) {
+            entry.getKey().setStock(entry.getKey().getStock() - entry.getValue());
+        }
+    }
+
+    public void showOrders(int customerId) {
+        for (Order order : orders) {
+            if (order.customer.getId() == customerId) {
+                order.display();
+            }
+        }
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        ComputerStore store = new ComputerStore();
+        
+        Product laptop = new Product(1, "MacBook Pro", "Laptop", 2500, 5);
+        Product mouse = new Product(2, "Razer Viper", "Mouse", 80, 20);
+        
+        store.addProduct(laptop);
+        store.addProduct(mouse);
+        
+        Customer john = new Customer(1, "John Doe", true);
+        store.addCustomer(john);
+        
+        Map<Product, Integer> orderItems = new HashMap<>();
+        orderItems.put(laptop, 1);
+        orderItems.put(mouse, 2);
+        
+        store.createOrder(john, orderItems);
+        
+        System.out.println("\nOrders of John Doe:");
+        store.showOrders(1);
+    }
+}
