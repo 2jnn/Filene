@@ -1,0 +1,138 @@
+public class LibraryApp {
+
+    // ==== Базовый класс ====
+    static class LibraryMedia {
+        protected String title;
+        protected int publicationYear;
+        protected boolean available;
+
+        public LibraryMedia(String title, int publicationYear) {
+            this.title = title;
+            this.publicationYear = publicationYear;
+            this.available = true;
+        }
+
+        public void borrow() {
+            if (available) {
+                available = false;
+                System.out.println("\"" + title + "\" has been borrowed.");
+            } else {
+                System.out.println("\"" + title + "\" is already borrowed.");
+            }
+        }
+
+        public void returnMedia() {
+            if (!available) {
+                available = true;
+                System.out.println("\"" + title + "\" has been returned.");
+            } else {
+                System.out.println("\"" + title + "\" wasn't borrowed.");
+            }
+        }
+
+        public void displayInformation() {
+            System.out.println("Title: " + title);
+            System.out.println("Year: " + publicationYear);
+            System.out.println("Status: " + (available ? "Available" : "Borrowed"));
+        }
+    }
+
+    // ==== Подкласс Book ====
+    static class Book extends LibraryMedia {
+        private String author;
+        private int numberOfPages;
+
+        public Book(String title, int publicationYear, String author, int numberOfPages) {
+            super(title, publicationYear);
+            this.author = author;
+            this.numberOfPages = numberOfPages;
+        }
+
+        @Override
+        public void displayInformation() {
+            super.displayInformation();
+            System.out.println("Author: " + author);
+            System.out.println("Pages: " + numberOfPages);
+        }
+
+        public void checkNumberOfPages() {
+            if (numberOfPages > 500) {
+                System.out.println("This is a long book (" + numberOfPages + " pages).");
+            } else {
+                System.out.println("This is a standard book (" + numberOfPages + " pages).");
+            }
+        }
+    }
+
+    // ==== Подкласс Movie ====
+    static class Movie extends LibraryMedia {
+        private String director;
+        private int duration;
+
+        public Movie(String title, int publicationYear, String director, int duration) {
+            super(title, publicationYear);
+            this.director = director;
+            this.duration = duration;
+        }
+
+        @Override
+        public void displayInformation() {
+            super.displayInformation();
+            System.out.println("Director: " + director);
+            System.out.println("Duration: " + duration + " minutes");
+        }
+
+        public void checkDuration() {
+            if (duration > 120) {
+                System.out.println("This is a long movie (" + duration + " minutes).");
+            } else {
+                System.out.println("This is a standard movie (" + duration + " minutes).");
+            }
+        }
+    }
+
+    // ==== Main метод ====
+    public static void main(String[] args) {
+        // Создание объектов
+        Book book1 = new Book("The Witcher", 1990, "Andrzej Sapkowski", 320);
+        Book book2 = new Book("War and Peace", 1869, "Leo Tolstoy", 1225);
+
+        Movie movie1 = new Movie("The Green Mile", 1999, "Frank Darabont", 189);
+        Movie movie2 = new Movie("The Lion King", 1994, "Roger Allers", 88);
+
+        // Полиморфный массив
+        LibraryMedia[] mediaArray = new LibraryMedia[4];
+        mediaArray[0] = book1;
+        mediaArray[1] = book2;
+        mediaArray[2] = movie1;
+        mediaArray[3] = movie2;
+
+        // Вывод информации
+        System.out.println("===== MEDIA INFO =====");
+        for (LibraryMedia media : mediaArray) {
+            media.displayInformation();
+            System.out.println("----------------------------");
+        }
+
+        // Демонстрация заимствования
+        System.out.println("\n===== BORROWING DEMO =====");
+        book1.borrow();
+        book1.borrow(); // уже занято
+        book1.returnMedia();
+
+        // Методы по типу
+        System.out.println("\n===== TYPE-SPECIFIC METHODS =====");
+        book1.checkNumberOfPages();
+        movie1.checkDuration();
+
+        // Приведение типа
+        System.out.println("\n===== TYPE CASTING =====");
+        for (LibraryMedia media : mediaArray) {
+            if (media instanceof Book) {
+                ((Book) media).checkNumberOfPages();
+            } else if (media instanceof Movie) {
+                ((Movie) media).checkDuration();
+            }
+        }
+    }
+}
