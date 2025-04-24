@@ -1,0 +1,40 @@
+class Vehicle {
+    public void start() {
+        System.out.println("Vehicle starting...");
+    }
+
+    public void stop() {
+        System.out.println("Vehicle stopping...");
+    }
+}
+
+class Car extends Vehicle {
+    private int numberOfSeats;
+
+    public Car(int seats) {
+        numberOfSeats = seats;
+    }
+
+    public int getNumberOfSeats() {
+        return numberOfSeats;
+    }
+
+    @Override
+    public void start() {
+        System.out.println("Car is starting the engine...");
+    }
+
+    @Override
+    public void stop() {
+        System.out.println("Car has stopped and engine turned off.");
+    }
+}
+
+public class tut6 {
+    public static void main(String[] args) {
+        Car myCar = new Car(5);
+        myCar.start();
+        myCar.stop();
+        System.out.println("Seats in car: " + myCar.getNumberOfSeats());
+    }
+}
