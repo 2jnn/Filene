@@ -1,0 +1,168 @@
+import java.util.ArrayList;
+
+public class LibraryTest {
+    public static void main(String[] args) {
+        System.out.println("Welcome to " + MediaItem.LIBRARY_NAME);
+        System.out.println("Maximum rental period: " + Rentable.MAX_RENTAL_DAYS + " days\n");
+
+        Book book1 = new Book("The Great Gatsby", "F. Scott Fitzgerald", 1925, "978-0-7432-7356-5");
+        System.out.println(book1.getDisplayString());
+        System.out.println("Available: " + book1.isAvailable());
+
+        if (book1.rent()) {
+            System.out.println("Book rented successfully!");
+        }
+        System.out.println("Available after rental: " + book1.isAvailable());
+
+        System.out.println("Late fee for 3 days: $" + Rentable.calculateLateFee(3));
+
+        book1.returnItem();
+        System.out.println("Available after return: " + book1.isAvailable() + "\n");
+
+        Movie movie1 = new Movie("Inception", "Christopher Nolan", 2010, 148);
+        System.out.println(movie1.getDisplayString());
+
+        movie1.addRating(5);
+        movie1.addRating(4);
+        movie1.addRating(5);
+        System.out.println("Average rating: " + movie1.getAverageRating() + " stars");
+
+        if (movie1.rent()) {
+            System.out.println("Movie rented successfully!");
+        }
+
+        if (!movie1.rent()) {
+            System.out.println("Movie is already rented!");
+        }
+    }
+}
+
+interface MediaItem {
+    String LIBRARY_NAME = "Digital Commons Library";
+
+    String getTitle();
+    int getYear();
+    String getDisplayString();
+}
+
+interface Rentable {
+    int MAX_RENTAL_DAYS = 14;
+
+    static double calculateLateFee(int daysLate) {
+        return daysLate * 0.50;
+    }
+
+    boolean isAvailable();
+    boolean rent();
+    void returnItem();
+}
+
+interface Rateable {
+    void addRating(int rating);
+    double getAverageRating();
+}
+
+class Book implements MediaItem, Rentable {
+    private String title;
+    private String author;
+    private int publicationYear;
+    private String isbn;
+    private boolean available;
+
+    public Book(String title, String author, int year, String isbn) {
+        this.title = title;
+        this.author = author;
+        this.publicationYear = year;
+        this.isbn = isbn;
+        this.available = true;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public int getYear() {
+        return publicationYear;
+    }
+
+    public String getDisplayString() {
+        return "Book: " + title + " by " + author + " (" + publicationYear + "), ISBN: " + isbn;
+    }
+
+    public boolean isAvailable() {
+        return available;
+    }
+
+    public boolean rent() {
+        if (available) {
+            available = false;
+            return true;
+        }
+        return false;
+    }
+
+    public void returnItem() {
+        available = true;
+    }
+}
+
+class Movie implements MediaItem, Rentable, Rateable {
+    private String title;
+    private String director;
+    private int releaseYear;
+    private int durationMinutes;
+    private boolean available;
+    private ArrayList<Integer> ratings;
+
+    public Movie(String title, String director, int year, int duration) {
+        this.title = title;
+        this.director = director;
+        this.releaseYear = year;
+        this.durationMinutes = duration;
+        this.available = true;
+        this.ratings = new ArrayList<>();
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public int getYear() {
+        return releaseYear;
+    }
+
+    public String getDisplayString() {
+        return "Movie: " + title + " directed by " + director + " (" + releaseYear + "), " + durationMinutes + " min";
+    }
+
+    public boolean isAvailable() {
+        return available;
+    }
+
+    public boolean rent() {
+        if (available) {
+            available = false;
+            return true;
+        }
+        return false;
+    }
+
+    public void returnItem() {
+        available = true;
+    }
+
+    public void addRating(int rating) {
+        if (rating >= 1 && rating <= 5) {
+            ratings.add(rating);
+        }
+    }
+
+    public double getAverageRating() {
+        if (ratings.size() == 0) return 0.0;
+        int total = 0;
+        for (int r : ratings) {
+            total += r;
+        }
+        return (double) total / ratings.size();
+    }
+}
