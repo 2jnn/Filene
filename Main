@@ -1,0 +1,180 @@
+import java.util.*;
+
+interface IHazardNotifier {
+    void notifyHazard(String containerNumber);
+}
+
+abstract class Container {
+    protected double cargoMass;
+    protected int height, depth;
+    protected double tareWeight;
+    protected String serialNumber;
+    protected double maxCapacity;
+    private static int counter = 1;
+
+    public Container(String type, int height, int depth, double tareWeight, double maxCapacity) {
+        this.height = height;
+        this.depth = depth;
+        this.tareWeight = tareWeight;
+        this.maxCapacity = maxCapacity;
+        this.serialNumber = "KON-" + type + "-" + counter++;
+    }
+
+    public void loadCargo(double mass) throws Exception {
+        if (mass > maxCapacity) throw new Exception("OverfillException");
+        this.cargoMass = mass;
+    }
+
+    public void unload() {
+        this.cargoMass = 0;
+    }
+
+    public String getSerial() {
+        return serialNumber;
+    }
+
+    public double getMass() {
+        return cargoMass + tareWeight;
+    }
+
+    public abstract String info();
+}
+
+class LiquidContainer extends Container implements IHazardNotifier {
+    private boolean hazardous;
+
+    public LiquidContainer(int height, int depth, double tareWeight, double maxCapacity, boolean hazardous) {
+        super("L", height, depth, tareWeight, maxCapacity);
+        this.hazardous = hazardous;
+    }
+
+    @Override
+    public void loadCargo(double mass) throws Exception {
+        double limit = hazardous ? maxCapacity * 0.5 : maxCapacity * 0.9;
+        if (mass > limit) {
+            notifyHazard(serialNumber);
+            throw new Exception("Dangerous operation");
+        }
+        this.cargoMass = mass;
+    }
+
+    public void notifyHazard(String serial) {
+        System.out.println("[Hazard Alert] Container: " + serial);
+    }
+
+    public String info() {
+        return serialNumber + " (Liquid, " + (hazardous ? "Hazardous" : "Regular") + ", cargo: " + cargoMass + ")";
+    }
+}
+
+class GasContainer extends Container implements IHazardNotifier {
+    private double pressure;
+
+    public GasContainer(int height, int depth, double tareWeight, double maxCapacity, double pressure) {
+        super("G", height, depth, tareWeight, maxCapacity);
+        this.pressure = pressure;
+    }
+
+    public void unload() {
+        this.cargoMass *= 0.05; // Leave 5%
+    }
+
+    public void notifyHazard(String serial) {
+        System.out.println("[Hazard Alert] Gas Container: " + serial);
+    }
+
+    public String info() {
+        return serialNumber + " (Gas, " + pressure + " atm, cargo: " + cargoMass + ")";
+    }
+}
+
+class RefrigeratedContainer extends Container {
+    private String product;
+    private double temperature;
+    private static final Map<String, Double> productTemps = Map.ofEntries(
+        Map.entry("bananas", 13.3),
+        Map.entry("chocolate", 18.0),
+        Map.entry("fish", 2.0),
+        Map.entry("meat", -15.0),
+        Map.entry("ice cream", -18.0),
+        Map.entry("frozen pizza", -30.0),
+        Map.entry("cheese", 7.2),
+        Map.entry("sausages", 5.0),
+        Map.entry("butter", 20.5),
+        Map.entry("eggs", 19.0)
+    );
+
+    public RefrigeratedContainer(int height, int depth, double tareWeight, double maxCapacity, String product, double temperature) throws Exception {
+        super("C", height, depth, tareWeight, maxCapacity);
+        product = product.toLowerCase();
+        if (!productTemps.containsKey(product) || temperature < productTemps.get(product)) {
+            throw new Exception("Invalid temperature for " + product);
+        }
+        this.product = product;
+        this.temperature = temperature;
+    }
+
+    public String info() {
+        return serialNumber + " (Refrigerated: " + product + " at " + temperature + "°C, cargo: " + cargoMass + ")";
+    }
+}
+
+class Ship {
+    private String name;
+    private double maxWeight;
+    private int maxContainers;
+    private int speed;
+    private List<Container> containers = new ArrayList<>();
+
+    public Ship(String name, int speed, int maxContainers, double maxWeight) {
+        this.name = name;
+        this.speed = speed;
+        this.maxContainers = maxContainers;
+        this.maxWeight = maxWeight;
+    }
+
+    public void load(Container c) throws Exception {
+        if (containers.size() >= maxContainers || totalWeight() + c.getMass() > maxWeight * 1000) {
+            throw new Exception("Cannot load container " + c.getSerial());
+        }
+        containers.add(c);
+    }
+
+    public void remove(String serial) {
+        containers.removeIf(c -> c.getSerial().equals(serial));
+    }
+
+    public double totalWeight() {
+        return containers.stream().mapToDouble(Container::getMass).sum();
+    }
+
+    public void info() {
+        System.out.println("Ship " + name + ": " + containers.size() + " containers, total weight: " + totalWeight()/1000 + "t");
+        for (Container c : containers) System.out.println(" - " + c.info());
+    }
+}
+
+public class Main {
+    public static void main(String[] args) throws Exception {
+        Ship ship = new Ship("Aurora", 22, 5, 150);
+
+        Container bananaCont = new RefrigeratedContainer(300, 400, 1200, 5000, "bananas", 14);
+        bananaCont.loadCargo(3000);
+
+        Container fishCont = new RefrigeratedContainer(290, 380, 1100, 4500, "fish", 2.5);
+        fishCont.loadCargo(2800);
+
+        Container liquidCont = new LiquidContainer(280, 360, 1100, 4000, false);
+        liquidCont.loadCargo(3500);
+
+        Container gasCont = new GasContainer(270, 350, 1000, 3000, 3);
+        gasCont.loadCargo(2900);
+
+        ship.load(bananaCont);
+        ship.load(fishCont);
+        ship.load(liquidCont);
+        ship.load(gasCont);
+
+        ship.info();
+    }
+}
